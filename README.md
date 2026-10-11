@@ -36,8 +36,10 @@ A full-stack financial transaction system built with Node.js, PostgreSQL, and Re
 | Service | Link |
 |---|---|
 | **Frontend** | [Live App](https://transactional-lader-system.vercel.app/) |
-| **Backend API** | [API Endpoint](https://strong-essence-production-0575.up.railway.app) |
-| **Health Check** | [Health Status](https://strong-essence-production-0575.up.railway.app/health) |
+| **Backend API** | [API Endpoint](https://ledger-api-anish033.onrender.com) |
+| **Health Check** | [Health Status](https://ledger-api-anish033.onrender.com/health) |
+
+> The backend runs on Render's free tier and sleeps when idle, so the first request can take about 30–60 seconds. After that it responds normally.
 
 ---
 
@@ -122,7 +124,8 @@ In any system that moves money, three things must be guaranteed:
 
 | Service | What runs there |
 |---|---|
-| Railway | Node.js backend + managed PostgreSQL |
+| Render | Node.js backend (free web service) |
+| Neon | Managed PostgreSQL |
 | Vercel | React frontend (static build) |
 
 ---
@@ -413,8 +416,8 @@ node loadtest.js
 1. **Clone the repo & install dependencies**
 
    ```bash
-   git clone https://github.com/Anish033-coder/Transactional-Lader-System.git
-   cd Transactional-Lader-System/backend
+   git clone https://github.com/Anish033-coder/Transactional_Ledger_System.git
+   cd Transactional_Ledger_System/backend
    npm install
    ```
 
@@ -485,7 +488,7 @@ node loadtest.js
 ## 📁 Project Structure
 
 ```
-Transactional-Lader-System/
+Transactional_Ledger_System/
 ├── README.md
 ├── backend/
 │   ├── src/
@@ -552,14 +555,16 @@ Transactional-Lader-System/
 
 ## 🚢 Deployment
 
-**Backend** deployed on Railway with managed PostgreSQL.  
-Start command runs migrations automatically on every deploy:
+**Backend** deployed on Render from [`render.yaml`](render.yaml), with PostgreSQL on Neon.  
+The start command runs migrations automatically on every deploy:
 
 ```bash
-npx knex migrate:latest && node src/index.js
+npm run start:prod   # knex migrate:latest --env production && node src/index.js
 ```
 
-**Frontend** deployed on Vercel with `VITE_API_URL` pointing to Railway backend.
+To deploy your own copy: create a Neon database, then in Render choose **New → Blueprint**, pick this repo, and paste the Neon connection string as `DATABASE_URL`. Render generates `JWT_SECRET` itself.
+
+**Frontend** deployed on Vercel with `VITE_API_URL` pointing to the Render backend.
 
 Both platforms auto-deploy on every push to the main branch. Zero manual steps after initial setup.
 
@@ -586,7 +591,7 @@ These are intentional tradeoffs, not bugs:
 - How double‑entry bookkeeping creates a complete immutable audit trail.
 - How to write integration tests for financial logic using Jest.
 - How to structure a Node.js backend with clean separation of concerns.
-- How to deploy a backend with a managed database using Railway auto‑migrations.
+- How to deploy a backend with a managed database and automatic migrations on every deploy.
 - How to build and deploy a React frontend with Vite and Tailwind on Vercel.
 
 ---
@@ -594,7 +599,7 @@ These are intentional tradeoffs, not bugs:
 ## 👤 Author
 
 **Anish Kumawat**  
-2nd Year CSE — IIIT Lucknow
+3rd Year CSE — IIIT Lucknow
 
 ---
 

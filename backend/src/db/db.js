@@ -18,7 +18,7 @@ const db = knex({
   client: 'pg',
   connection: connectionConfig,
   pool: {
-    min: 2,
+    min: 0,  // Neon suspends idle databases; don't hold connections that will be dropped
     max: 20
   },
   ssl: process.env.NODE_ENV === 'production'

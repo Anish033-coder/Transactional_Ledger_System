@@ -1,16 +1,18 @@
 {
   "name": "ledger-backend",
   "version": "1.0.0",
-  "description": "Lader-System-Backend",
+  "description": "Transaction ledger backend",
   "main": "index.js",
   "scripts": {
-  "test": "NODE_ENV=test jest --runInBand --forceExit",
-  "test:debug": "NODE_ENV=test jest --runInBand --detectOpenHandles",
-  "start": "node src/index.js",
-  "dev": "nodemon src/index.js",
-  "migrate": "NODE_ENV=test knex migrate:latest",
-  "loadtest": "node loadtest.js"
-},
+    "test": "NODE_ENV=test jest --runInBand --forceExit",
+    "test:debug": "NODE_ENV=test jest --runInBand --detectOpenHandles",
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "migrate": "NODE_ENV=test knex migrate:latest",
+    "loadtest": "node loadtest.js",
+    "migrate:prod": "knex migrate:latest --env production",
+    "start:prod": "npm run migrate:prod && node src/index.js"
+  },
   "keywords": [
     "JS"
   ],

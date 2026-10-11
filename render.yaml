@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: ledger-api-anish033
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npm run start:prod
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false   # paste the Neon connection string when creating the Blueprint
+      - key: JWT_SECRET
+        generateValue: true
