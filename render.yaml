@@ -3,6 +3,7 @@ services:
     name: ledger-api-anish033
     runtime: node
     plan: free
+    region: singapore   # closest Render region to India; create the Neon database in Singapore too
     rootDir: backend
     buildCommand: npm ci
     startCommand: npm run start:prod
