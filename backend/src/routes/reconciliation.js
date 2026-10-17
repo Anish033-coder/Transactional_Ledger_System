@@ -7,7 +7,7 @@ const router = express.Router()
 router.get('/run', auth, async function(req, res, next) {
 
   try {
-    const report = await runReconciliation()
+    const report = await runReconciliation(req.user.userId)
 
     return res.status(200).json({ data: report })
 

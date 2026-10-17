@@ -84,7 +84,9 @@ app.use(function(err, req, res, next) {
     'INVALID_CREDENTIALS': 401,
     'FORBIDDEN':           403,
     'ACCOUNT_INACTIVE':    422,
-    'DEST_INACTIVE':       422
+    'DEST_INACTIVE':       422,
+    'CURRENCY_MISMATCH':   422,
+    'IDEMPOTENCY_CONFLICT': 409
   }
 
   const statusCode = statusCodes[err.code] || 500

@@ -8,10 +8,12 @@
     "test:debug": "NODE_ENV=test jest --runInBand --detectOpenHandles",
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "migrate": "NODE_ENV=test knex migrate:latest",
+    "migrate": "knex migrate:latest --env development",
     "loadtest": "node loadtest.js",
     "migrate:prod": "knex migrate:latest --env production",
-    "start:prod": "npm run migrate:prod && node src/index.js"
+    "start:prod": "npm run migrate:prod && node src/index.js",
+    "migrate:test": "NODE_ENV=test knex migrate:latest --env test",
+    "test:unit": "NODE_ENV=test jest --runInBand src/tests/transaction-regressions.test.js src/tests/reconciliation-unit.test.js"
   },
   "keywords": [
     "JS"

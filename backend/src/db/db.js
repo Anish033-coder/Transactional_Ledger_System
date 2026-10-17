@@ -6,7 +6,7 @@ if (process.env.NODE_ENV === 'test') {
 
 const knex = require('knex');
 
-const connectionConfig = process.env.DATABASE_URL || {
+const connectionConfig = (process.env.NODE_ENV !== 'test' && process.env.DATABASE_URL) || {
   host: process.env.DB_HOST || '127.0.0.1',
   port: process.env.DB_PORT || 5432,
   user: process.env.DB_USER || 'postgres',

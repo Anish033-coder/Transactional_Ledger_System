@@ -1,0 +1,15 @@
+jest.mock('../db/db', () => ({ db: { raw: jest.fn() } }))
+const { db } = require('../db/db')
+const { runReconciliation } = require('../services/ReconciliationService')
+beforeEach(() => jest.resetAllMocks())
+test('rejects an unscoped report before querying', async () => {
+  await expect(runReconciliation()).rejects.toMatchObject({ code: 'FORBIDDEN' })
+  expect(db.raw).not.toHaveBeenCalled()
+})
+test('an overdue pending transaction makes the report unhealthy', async () => {
+  db.raw.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [{ id: 'pending' }] })
+  const result = await runReconciliation('alice')
+  expect(result.healthy).toBe(false)
+  expect(result.summary.stuck_txn_count).toBe(1)
+  expect(db.raw.mock.calls.every(([, bindings]) => bindings[0] === 'alice')).toBe(true)
+})

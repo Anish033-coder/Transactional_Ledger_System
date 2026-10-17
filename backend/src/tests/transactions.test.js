@@ -104,4 +104,63 @@ describe('Transfer Logic', () => {
     expect(txns.length).toBe(1)
   })
 
+  test('simultaneous duplicate requests all replay one committed transfer', async () => {
+    const sender = await createTestAccount('race-sender@test.com', 1000)
+    const receiver = await createTestAccount('race-receiver@test.com', 0)
+    const results = await Promise.all(Array.from({ length: 10 }, () => transfer(sender.account.id, receiver.account.id, '100', null, sender.user.id, 'concurrent-key')))
+    expect(new Set(results.map(r => r.transaction.id)).size).toBe(1)
+    expect(results.filter(r => !r.replayed)).toHaveLength(1)
+    expect(results.every(r => r.newBalance === '900.00000000')).toBe(true)
+    const balance = await db('accounts').where({ id: receiver.account.id }).first()
+    expect(balance.balance).toBe('100.00000000')
+  })
+
+  test('opposite-direction transfers complete and conserve balances', async () => {
+    const a = await createTestAccount('opposite-a@test.com', 1000)
+    const b = await createTestAccount('opposite-b@test.com', 1000)
+    await Promise.all([
+      transfer(a.account.id, b.account.id, '100', null, a.user.id, 'opposite-a'),
+      transfer(b.account.id, a.account.id, '100', null, b.user.id, 'opposite-b')
+    ])
+    const accounts = await db('accounts').orderBy('id')
+    expect(accounts.map(a => a.balance)).toEqual(['1000.00000000', '1000.00000000'])
+  })
+
+  test('deposit completes and concurrent duplicates create one credit', async () => {
+    const a = await createTestAccount('deposit@test.com', 0)
+    const results = await Promise.all(Array.from({ length: 5 }, () => deposit(a.account.id, '0.00000001', null, a.user.id, 'deposit-race')))
+    expect(results.every(r => r.newBalance === '0.00000001')).toBe(true)
+    expect(await db('ledger_entries').select('*')).toHaveLength(1)
+  })
+
+  test('reconciliation is scoped to the caller and catches a missing transfer ledger', async () => {
+    const { runReconciliation } = require('../services/ReconciliationService')
+    const a = await createTestAccount('reconcile-a@test.com', 0)
+    const b = await createTestAccount('reconcile-b@test.com', 0)
+    await deposit(a.account.id, '100', null, a.user.id, 'reconcile-deposit')
+    await db('accounts').where({ id: b.account.id }).update({ balance: '1.00000000' })
+    expect((await runReconciliation(a.user.id)).healthy).toBe(true)
+    expect((await runReconciliation(b.user.id)).balance_mismatches).toHaveLength(1)
+    await db('accounts').where({ id: b.account.id }).update({ balance: '0.00000001' })
+    expect((await runReconciliation(b.user.id)).balance_mismatches).toHaveLength(1)
+    const result = await transfer(a.account.id, b.account.id, '1', null, a.user.id, 'reconcile-transfer')
+    await db('ledger_entries').where({ transaction_id: result.transaction.id }).del()
+    expect((await runReconciliation(a.user.id)).unbalanced_transactions).toHaveLength(1)
+  })
+
+  test('a ledger-write failure rolls back already updated balances and transaction', async () => {
+    const a = await createTestAccount('rollback-a@test.com', 1000)
+    const b = await createTestAccount('rollback-b@test.com', 0)
+    await db.raw('ALTER TABLE ledger_entries ADD CONSTRAINT test_reject_amount CHECK (amount <> 123)')
+    try {
+      await expect(transfer(a.account.id, b.account.id, '123', null, a.user.id, 'rollback-key')).rejects.toThrow()
+      expect((await db('accounts').where({ id: a.account.id }).first()).balance).toBe('1000.00000000')
+      expect((await db('accounts').where({ id: b.account.id }).first()).balance).toBe('0.00000000')
+      expect(await db('transactions').where({ idempotency_key: 'rollback-key' })).toHaveLength(0)
+      expect(await db('ledger_entries').select('*')).toHaveLength(0)
+    } finally {
+      await db.raw('ALTER TABLE ledger_entries DROP CONSTRAINT test_reject_amount')
+    }
+  })
+
 })
